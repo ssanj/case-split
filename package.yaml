@@ -1,0 +1,65 @@
+name:                case-split
+version:             0.1.0.0
+github:              "ssanj/case-split"
+license:             BSD3
+author:              "sanjiv sahayam"
+maintainer:          "sanjsmailbox@gmail.com"
+copyright:           "(c) 2017 sanjiv sahayam"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/ssanj/case-split#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- bytestring
+- parsec
+- process
+
+library:
+  source-dirs: src
+  exposed-modules:
+          Lib
+
+executables:
+  case-split-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Wincomplete-uni-patterns
+    - -Wincomplete-record-updates
+    dependencies:
+    - case-split
+
+tests:
+  case-split-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wincomplete-uni-patterns
+    - -Wincomplete-record-updates
+    dependencies:
+    - case-split
+    - HUnit
+    - QuickCheck
+    - tasty
+    - tasty-discover
+    - tasty-hunit
+    - tasty-quickcheck
+
