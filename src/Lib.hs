@@ -65,6 +65,7 @@ caseObjectDefP adt = do
                      _ <- char '[' <|> endOfLine
                      return name
 
+-- TODO: use between (char '[') (char ']') many1 (noneOf "]" >> anyChar)
 polyP :: P ()
 polyP = do
         _ <- optional $ many1 $ oneOf ("[]+-" ++ ['A' .. 'Z'])
