@@ -6,7 +6,8 @@ module Lib
       caseClassDefP,
       paramP,
       paramsP,
-      methodParamsP
+      methodParamsP,
+      annotationP
     ) where
 
 -- import Prelude (IO, Char, String, putStrLn, return, (++), ($))
@@ -18,12 +19,15 @@ type P = Parsec String ()
 -- final case class DecodeError(reason: String, error: Option[Throwable]) extends MessageError
 -- final case class ValidationError(reason: String) extends MessageError
 
+-- TODO: use between (char '[') (char ']')
 typeIdP :: P String
-typeIdP = many1 alphaNum
+typeIdP = many1 (alphaNum <|> oneOf "[]")
 
 valP :: P String
 valP = many1 alphaNum
 
+
+-- trait Blah[+A] {
 traitDefP :: P String
 traitDefP = do
             _ <- string "sealed"
@@ -31,7 +35,7 @@ traitDefP = do
             _ <- string "trait"
             _ <- spaces
             name <- typeIdP
-            _ <- endOfLine
+            _ <- char '[' <|> char '{' <|> endOfLine
             return name
 
 abstractClassDefP :: P String
@@ -43,7 +47,7 @@ abstractClassDefP = do
                     _ <- string "class"
                     _ <- spaces
                     name <- typeIdP
-                    _ <- space <|> char '(' <|>  char '[' <|> endOfLine
+                    _ <- char '(' <|>  char '[' <|> endOfLine
                     return name
 
 caseObjectDefP :: String -> P String
@@ -57,6 +61,7 @@ caseObjectDefP adt = do
                      _ <- string "extends"
                      _ <- spaces
                      _ <- string adt
+                     _ <- spaces
                      _ <- char '[' <|> endOfLine
                      return name
 
@@ -93,6 +98,7 @@ methodParamsP :: P [ClassParam]
 methodParamsP = do
                 _ <- char '('
                 _ <- spaces
+                _ <- optional annotationP
                 params <- paramsP
                 _ <- spaces
                 _ <- char ')'
@@ -100,8 +106,13 @@ methodParamsP = do
 
 -- final case class Some[+A](@deprecatedName('x, "2.12.0") value: A) extends Option[A] {
 -- final case class Some[+A](value: A) extends Option[A] {
+
+-- TODO: fix issue with endOfLine
+--- "final case class ReceiveError(reason: String, error: Option[Throwable]) extends QError\n"
 caseClassDefP :: String -> P CaseClass
 caseClassDefP adt = do
+                    _ <- optional (string "final")
+                    _ <- spaces
                     _ <- string "case"
                     _ <- spaces
                     _ <- string "class"
@@ -117,6 +128,14 @@ caseClassDefP adt = do
                     _ <- spaces
                     _ <- char '[' <|> char '{' <|> endOfLine
                     return (CaseClass name params)
+
+-- @deprecatedName('x, "2.12.0")
+annotationP :: P (String, String)
+annotationP = do
+              _ <- char '@'
+              name <- valP
+              annotation <- between (char '(') (char ')') (many1 $ noneOf ")" >> anyChar)
+              return (name, annotation)
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
