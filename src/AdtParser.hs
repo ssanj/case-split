@@ -1,13 +1,13 @@
-module Lib
-    ( someFunc,
-      traitDefP,
+module AdtParser
+    ( traitDefP,
       abstractClassDefP,
       caseObjectDefP,
       caseClassDefP,
       paramP,
       paramsP,
       methodParamsP,
-      annotationP
+      annotationP,
+      P
     ) where
 
 -- import Prelude (IO, Char, String, putStrLn, return, (++), ($))
@@ -21,11 +21,16 @@ type P = Parsec String ()
 
 -- TODO: use between (char '[') (char ']')
 typeIdP :: P String
-typeIdP = many1 (alphaNum <|> oneOf "[]")
+typeIdP = many1 alphaNum
 
 valP :: P String
 valP = many1 alphaNum
 
+whitespace :: P Char
+whitespace = char ' ' <|> char '\t'
+
+whitespaces :: P [Char]
+whitespaces = many whitespace
 
 -- trait Blah[+A] {
 traitDefP :: P String
@@ -34,9 +39,7 @@ traitDefP = do
             _ <- spaces
             _ <- string "trait"
             _ <- spaces
-            name <- typeIdP
-            _ <- char '[' <|> char '{' <|> endOfLine
-            return name
+            typeIdP
 
 abstractClassDefP :: P String
 abstractClassDefP = do
@@ -137,6 +140,3 @@ annotationP = do
               name <- valP
               annotation <- between (char '(') (char ')') (many1 $ noneOf ")" >> anyChar)
               return (name, annotation)
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"

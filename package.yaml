@@ -28,7 +28,7 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-          Lib
+          AdtParser
 
 executables:
   case-split-exe:
@@ -46,7 +46,7 @@ executables:
 
 tests:
   case-split-test:
-    main:                Spec.hs
+    main:                Driver.hs
     source-dirs:         test
     ghc-options:
     - -threaded
