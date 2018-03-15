@@ -1,35 +1,26 @@
-module AdtParserSpec where
+module AdtParserForTraitSpec where
 
 import Data.Either (Either(..))
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.Tasty.HUnit
 import AdtParser
+import Common
 
 import Text.Parsec
-
-data Command = Command String deriving Show
-
-assertParser :: (Eq r, Show r) => Command -> String -> P r -> Either ParseError r -> TestTree
-assertParser (Command commands) testName parser expectedResult =
-  let result = parse parser "" commands in
-  testCase testName $
-    assertBool ("failed with:" ++ (show result) ++ ", expected:" ++ (show expectedResult))
-               (result == expectedResult)
-
 
 traitSimpleTest :: TestTree
 traitSimpleTest =
   assertParser (Command "sealed trait MessageError")
                "ADT Parser should match simple trait"
-                traitDefP
+               traitDefP
                (Right "MessageError")
 
 traitWithBodyTest :: TestTree
 traitWithBodyTest =
   assertParser (Command "sealed trait Sim {")
                "ADT Parser should match a trait with a body"
-                traitDefP
+               traitDefP
                (Right "Sim")
 
 traitWithPolyTest :: TestTree
@@ -67,14 +58,15 @@ traitWithMultiplePolyTest =
                traitDefP
                (Right "MyContainer")
 
-test_ADT_Parser :: TestTree
-test_ADT_Parser = testGroup "ADT parser" [
-                                            traitSimpleTest,
-                                            traitWithPolyTest,
-                                            traitWithPolyCovariantTest,
-                                            traitWithPolyContravariantTest,
-                                            traitWithPolyAndSpacesTest,
-                                            traitWithBodyTest,
-                                            traitWithMultiplePolyTest
-                                          ]
+test_ADT_Parser_for_Trait :: TestTree
+test_ADT_Parser_for_Trait =
+  testGroup "ADT Parser for Trait" [
+                                      traitSimpleTest,
+                                      traitWithPolyTest,
+                                      traitWithPolyCovariantTest,
+                                      traitWithPolyContravariantTest,
+                                      traitWithPolyAndSpacesTest,
+                                      traitWithBodyTest,
+                                      traitWithMultiplePolyTest
+                                    ]
 

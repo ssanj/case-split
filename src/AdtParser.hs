@@ -49,9 +49,7 @@ abstractClassDefP = do
                     _ <- spaces
                     _ <- string "class"
                     _ <- spaces
-                    name <- typeIdP
-                    _ <- char '(' <|>  char '[' <|> endOfLine
-                    return name
+                    typeIdP
 
 caseObjectDefP :: String -> P String
 caseObjectDefP adt = do
