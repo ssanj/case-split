@@ -62,8 +62,6 @@ caseObjectDefP adt = do
                      _ <- string "extends"
                      _ <- spaces
                      _ <- string adt
-                     _ <- spaces
-                     _ <- char '[' <|> endOfLine
                      return name
 
 -- TODO: use between (char '[') (char ']') many1 (noneOf "]" >> anyChar)
