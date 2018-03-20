@@ -34,11 +34,27 @@ caseClassMatchTest =
                                    ClassParam (PName "error")  (PType "Option")
                                   ])
 
+caseClassWithParamAnnotationsMatchTest :: TestTree
+caseClassWithParamAnnotationsMatchTest =
+  assertParser (Command "final case class Some[+A](@deprecatedName('x, \"2.12.0\") value: A) extends Option[A] {")
+               "ADT Parser should match a case class with param annotations"
+               (caseClassDefP "Option")
+               (Right $ CaseClass "Some" [ClassParam (PName "value") (PType "A")])
+
+caseClassMissTest :: TestTree
+caseClassMissTest =
+  assertParser2 (Command "case class KeyNotFound(key: String) extends LookupError")
+                "ADT Parser should not match a case class with the wrong root type"
+                (caseClassDefP "KeyNotFound")
+                "KeyNotFound"
+
 test_ADT_Parser_for_Abstract_Class :: TestTree
 test_ADT_Parser_for_Abstract_Class =
   testGroup "ADT Parser for Case Types"
   [
     caseObjectMatchTest,
     caseObjectMissTest,
-    caseClassMatchTest
+    caseClassMatchTest,
+    caseClassWithParamAnnotationsMatchTest,
+    caseClassMissTest
   ]

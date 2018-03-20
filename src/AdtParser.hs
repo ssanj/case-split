@@ -14,27 +14,23 @@ module AdtParser
       PType(..)
     ) where
 
--- import Prelude (IO, Char, String, putStrLn, return, (++), ($))
 import Text.Parsec
 
 type P = Parsec String ()
 
--- sealed trait MessageError
--- final case class DecodeError(reason: String, error: Option[Throwable]) extends MessageError
--- final case class ValidationError(reason: String) extends MessageError
+data PName = PName String deriving (Show, Eq)
 
--- TODO: use between (char '[') (char ']')
+data PType = PType String deriving (Show, Eq)
+
+data ClassParam = ClassParam PName PType deriving (Show, Eq)
+
+data CaseClass = CaseClass String [ClassParam] deriving (Show, Eq)
+
 typeIdP :: P String
 typeIdP = many1 alphaNum
 
 valP :: P String
 valP = many1 alphaNum
-
-whitespace :: P Char
-whitespace = char ' ' <|> char '\t'
-
-whitespaces :: P [Char]
-whitespaces = many whitespace
 
 -- trait Blah[+A] {
 traitDefP :: P String
@@ -68,19 +64,14 @@ caseObjectDefP adt = do
                      _ <- string adt
                      return name
 
--- TODO: use between (char '[') (char ']') many1 (noneOf "]" >> anyChar)
+upperChar :: P Char
+upperChar = oneOf ['A' .. 'Z']
+
 polyP :: P ()
 polyP = do
-        _ <- optional $ many1 $ oneOf ("[]+-" ++ ['A' .. 'Z'])
+        _ <- optional $ between (char '[') (char ']') $ many1 (noneOf "]" >> upperChar)
+        -- many1 $ oneOf ("[]+-" ++ ['A' .. 'Z'])
         return ()
-
-data PName = PName String deriving (Show, Eq)
-
-data PType = PType String deriving (Show, Eq)
-
-data ClassParam = ClassParam PName PType deriving (Show, Eq)
-
-data CaseClass = CaseClass String [ClassParam] deriving (Show, Eq)
 
 paramP :: P ClassParam
 paramP = do
@@ -109,11 +100,6 @@ methodParamsP = do
                 _ <- char ')'
                 return params
 
--- final case class Some[+A](@deprecatedName('x, "2.12.0") value: A) extends Option[A] {
--- final case class Some[+A](value: A) extends Option[A] {
-
--- TODO: fix issue with endOfLine
---- "final case class ReceiveError(reason: String, error: Option[Throwable]) extends QError\n"
 caseClassDefP :: String -> P CaseClass
 caseClassDefP adt = do
                     _ <- optional (string "final")
