@@ -7,7 +7,11 @@ module AdtParser
       paramsP,
       methodParamsP,
       annotationP,
-      P
+      P,
+      ClassParam(..),
+      CaseClass(..),
+      PName(..),
+      PType(..)
     ) where
 
 -- import Prelude (IO, Char, String, putStrLn, return, (++), ($))
@@ -70,13 +74,13 @@ polyP = do
         _ <- optional $ many1 $ oneOf ("[]+-" ++ ['A' .. 'Z'])
         return ()
 
-data PName = PName String deriving Show
+data PName = PName String deriving (Show, Eq)
 
-data PType = PType String deriving Show
+data PType = PType String deriving (Show, Eq)
 
-data ClassParam = ClassParam PName PType deriving Show
+data ClassParam = ClassParam PName PType deriving (Show, Eq)
 
-data CaseClass = CaseClass String [ClassParam] deriving Show
+data CaseClass = CaseClass String [ClassParam] deriving (Show, Eq)
 
 paramP :: P ClassParam
 paramP = do
@@ -85,6 +89,7 @@ paramP = do
          _ <- char ':'
          _ <- spaces
          ptype <- typeIdP
+         _ <- optional (spaces >> char '[' >> spaces >> typeIdP >> spaces >> char ']')
          return $ ClassParam (PName pname) (PType ptype)
 
 paramsP :: P [ClassParam]
@@ -125,8 +130,6 @@ caseClassDefP adt = do
                     _ <- string "extends"
                     _ <- spaces
                     _ <- string adt
-                    _ <- spaces
-                    _ <- char '[' <|> char '{' <|> endOfLine
                     return (CaseClass name params)
 
 -- @deprecatedName('x, "2.12.0")
