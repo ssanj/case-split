@@ -21,7 +21,7 @@ caseObjectMissTest =
   assertParser2 (Command "case object Open extends DoorState")
                 "ADT Parser should not match a case object class with the wrong root type"
                 (caseObjectDefP "Traffic")
-                (hasError "Traffic")
+                "Traffic"
 
 caseClassMatchTest :: TestTree
 caseClassMatchTest =

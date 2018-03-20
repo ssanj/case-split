@@ -1,7 +1,6 @@
 module Common(Command(..),
               assertParser,
-              assertParser2,
-              hasError) where
+              assertParser2) where
 
 import Data.Either (Either(..))
 import Data.List (intercalate, isInfixOf)
@@ -24,24 +23,22 @@ assertParser (Command commands) testName parser expectedResult =
     assertBool ("failed with:" ++ (show result) ++ ", expected:" ++ (show expectedResult))
                (result == expectedResult)
 
-hasError :: Show r => String -> Either ParseError r  -> (Bool, String)
-hasError text = either (\pe -> (containsMatches text pe, displayMessageStrings pe)) (\r -> (False, show r))
-        where
-          messageStrings = fmap toMessageString . errorMessages
-
-          toMessageString :: Message -> String
-          toMessageString (SysUnExpect string) = "library generated unexpected:" ++ string
-          toMessageString (UnExpect    string) = "unexpected:" ++ string
-          toMessageString (Expect      string) = "expected:" ++ string
-          toMessageString (Message     string) = "raw message:" ++ string
-
-          displayMessageStrings = intercalate "\n" . ("" :)  . messageStrings
-
-          containsMatches text = (> 0) . length . filter (isInfixOf text) . messageStrings
-
-
-assertParser2 :: Command -> String -> P r -> (Either ParseError r -> (Bool, String)) -> TestTree
-assertParser2 (Command commands) testName parser assertResult =
-  let result = parse parser "" commands in
+assertParser2 :: Show r => Command -> String -> P r -> String -> TestTree
+assertParser2 (Command commands) testName parser text =
+  let (containsError, errorMessage) = hasError text (parse parser "" commands) in
   testCase testName $
-    assertBool ("failed with:" ++ (snd $ assertResult result)) (fst $ assertResult result)
+    assertBool ("failed with:" ++ errorMessage) containsError
+    where
+        hasError text = either (\pe -> (containsMatches text pe, displayMessageStrings pe)) (\r -> (False, show r))
+
+        messageStrings = fmap toMessageString . errorMessages
+
+        toMessageString :: Message -> String
+        toMessageString (SysUnExpect string) = "library generated unexpected:" ++ string
+        toMessageString (UnExpect    string) = "unexpected:" ++ string
+        toMessageString (Expect      string) = "expected:" ++ string
+        toMessageString (Message     string) = "raw message:" ++ string
+
+        displayMessageStrings = intercalate "\n" . ("" :)  . messageStrings
+
+        containsMatches text = (> 0) . length . filter (isInfixOf text) . messageStrings
