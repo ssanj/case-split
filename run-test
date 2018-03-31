@@ -1,2 +1,2 @@
 #!/bin/bash
-stack test --file-watch
+stack test --file-watch --fast

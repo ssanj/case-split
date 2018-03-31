@@ -1,5 +1,7 @@
 module AdtParser
-    ( traitDefP,
+    ( adtP,
+      hasADT,
+      traitDefP,
       abstractClassDefP,
       caseObjectDefP,
       caseClassDefP,
@@ -31,6 +33,12 @@ typeIdP = many1 alphaNum
 
 valP :: P String
 valP = many1 alphaNum
+
+hasADT :: String -> Bool
+hasADT line = either (const False) (const True) (parse adtP "" line)
+
+adtP :: P String
+adtP = try (traitDefP) <|> abstractClassDefP
 
 -- trait Blah[+A] {
 traitDefP :: P String

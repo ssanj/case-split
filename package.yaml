@@ -24,6 +24,8 @@ dependencies:
 - bytestring
 - parsec
 - process
+- directory
+- filepath
 
 library:
   source-dirs: src
