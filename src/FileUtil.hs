@@ -41,8 +41,7 @@ getAllSubDirectories root = do dirs <- getDirectories root
 findAdtMatches :: FilePath -> IO [FilePath]
 findAdtMatches root = do allDirs <- getAllSubDirectories root
                          let scalaFiles = fmap getScalaFilesInDir allDirs -- [IO [FilePath]]
-                         allScalaFiles <- foldMap id scalaFiles
-                         findFilesThatMatch allScalaFiles
+                         foldMap (>>= findFilesThatMatch) scalaFiles
 
 findFilesThatMatch :: [FilePath] -> IO [FilePath]
 findFilesThatMatch files = filterM (\f -> isJust . find hasADT <$> (fetchLines f)) files
