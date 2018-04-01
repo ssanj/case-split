@@ -11,9 +11,9 @@ module AdtParser
       annotationP,
       P,
       ClassParam(..),
-      CaseClass(..),
       PName(..),
-      PType(..)
+      PType(..),
+      AdtType(..)
     ) where
 
 import Text.Parsec
@@ -26,7 +26,8 @@ data PType = PType String deriving (Show, Eq)
 
 data ClassParam = ClassParam PName PType deriving (Show, Eq)
 
-data CaseClass = CaseClass String [ClassParam] deriving (Show, Eq)
+data AdtType = CaseClass String [ClassParam]
+             | CaseObject String deriving (Show, Eq)
 
 typeIdP :: P String
 typeIdP = many1 alphaNum
@@ -59,7 +60,7 @@ abstractClassDefP = do
                     _ <- spaces
                     typeIdP
 
-caseObjectDefP :: String -> P String
+caseObjectDefP :: String -> P AdtType
 caseObjectDefP adt = do
                      _ <- string "case"
                      _ <- spaces
@@ -70,7 +71,7 @@ caseObjectDefP adt = do
                      _ <- string "extends"
                      _ <- spaces
                      _ <- string adt
-                     return name
+                     return (CaseObject name)
 
 upperChar :: P Char
 upperChar = oneOf ['A' .. 'Z']
@@ -108,7 +109,7 @@ methodParamsP = do
                 _ <- char ')'
                 return params
 
-caseClassDefP :: String -> P CaseClass
+caseClassDefP :: String -> P AdtType
 caseClassDefP adt = do
                     _ <- optional (string "final")
                     _ <- spaces

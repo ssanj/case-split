@@ -14,7 +14,7 @@ caseObjectMatchTest =
   assertParser (Command "case object Red extends Traffic")
                "ADT Parser should match a case object class"
                (caseObjectDefP "Traffic")
-               (Right "Red")
+               (Right $ CaseObject "Red")
 
 caseObjectMissTest :: TestTree
 caseObjectMissTest =

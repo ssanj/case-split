@@ -49,7 +49,6 @@ findAdtMatches root = do allDirs <- getAllSubDirectories root
                          (matched, considered) <- foldMap (fmap (\fp -> (findFilesThatMatch fp, pure fp))) scalaFiles -- (IO [FilePath], IO [FilePath])
                          liftA2 (\m c -> (AdtMatchedResults m, AdtConsideredResults c)) matched considered
 
-
 findFilesThatMatch :: [FilePath] -> IO [FilePath]
 findFilesThatMatch files = filterM (\f -> isJust . find hasADT <$> (fetchLines f)) files
 
