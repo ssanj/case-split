@@ -1,5 +1,8 @@
 module AdtParser
     ( adtP,
+      adtTypeP,
+      getAdt,
+      getAdtType,
       hasADT,
       traitDefP,
       abstractClassDefP,
@@ -13,10 +16,11 @@ module AdtParser
       ClassParam(..),
       PName(..),
       PType(..),
-      AdtType(..)
+      AdtType(..),
     ) where
 
 import Text.Parsec
+import Data.Either (rights)
 
 type P = Parsec String ()
 
@@ -38,8 +42,17 @@ valP = many1 alphaNum
 hasADT :: String -> Bool
 hasADT line = either (const False) (const True) (parse adtP "" line)
 
+getAdt :: String -> Either ParseError String
+getAdt line = parse adtP "" line
+
+getAdtType :: String -> [String] -> [AdtType]
+getAdtType key content = rights $ fmap (parse (adtTypeP key) "") content
+
 adtP :: P String
 adtP = try (traitDefP) <|> abstractClassDefP
+
+adtTypeP :: String -> P AdtType
+adtTypeP baseType = try (caseObjectDefP baseType) <|> caseClassDefP baseType
 
 -- trait Blah[+A] {
 traitDefP :: P String
@@ -62,6 +75,8 @@ abstractClassDefP = do
 
 caseObjectDefP :: String -> P AdtType
 caseObjectDefP adt = do
+                     _ <- optional (string "final")
+                     _ <- spaces
                      _ <- string "case"
                      _ <- spaces
                      _ <- string "object"

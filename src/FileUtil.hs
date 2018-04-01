@@ -3,9 +3,12 @@ module FileUtil (getScalaFilesInDir,
                  findFilesThatMatch,
                  getDirectories,
                  getAllSubDirectories,
-                 findAdtMatches) where
+                 findAdtMatches,
+                 processAdt,
+                 processMatches) where
 
 import Data.Char (isSpace)
+import Data.Either (rights)
 import Data.Maybe (isJust)
 import Control.Applicative (liftA2)
 import Control.Monad (filterM)
@@ -48,6 +51,17 @@ findAdtMatches root = do allDirs <- getAllSubDirectories root
                          let scalaFiles = fmap getScalaFilesInDir allDirs -- [IO [FilePath]]
                          (matched, considered) <- foldMap (fmap (\fp -> (findFilesThatMatch fp, pure fp))) scalaFiles -- (IO [FilePath], IO [FilePath])
                          liftA2 (\m c -> (AdtMatchedResults m, AdtConsideredResults c)) matched considered
+
+processMatches :: AdtMatchedResults -> IO [(String, [AdtType])]
+processMatches (AdtMatchedResults files) =
+    let processedFileContent = fmap (\f -> fmap processAdt $ fetchLines f) files in
+    foldMap id processedFileContent
+
+processAdt :: [String] -> [(String, [AdtType])]
+processAdt contents = let keys       = rights $ fmap (getAdt) contents
+                          keyValues  = fmap (\k -> (k, getAdtType k contents)) keys
+                          matches    = filter (\(_, v) -> not $ null v) keyValues
+                      in matches
 
 findFilesThatMatch :: [FilePath] -> IO [FilePath]
 findFilesThatMatch files = filterM (\f -> isJust . find hasADT <$> (fetchLines f)) files
