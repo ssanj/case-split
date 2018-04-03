@@ -54,6 +54,13 @@ caseClassWithParamAnnotationsMatchTest =
                (caseClassDefP "Option")
                (Right $ CaseClass "Some" [ClassParam (PName "value") (PType "A")])
 
+caseClassWithNonVariantMatchTest :: TestTree
+caseClassWithNonVariantMatchTest =
+  assertParser (Command "final case class InvalidResourceRef[F](t: Throwable) extends ResourceProviderError[F]")
+               "ADT Parser should match a case class with non variant type params"
+               (caseClassDefP "ResourceProviderError")
+               (Right $ CaseClass "InvalidResourceRef" [ClassParam (PName "t") (PType "Throwable")])
+
 caseClassMissTest :: TestTree
 caseClassMissTest =
   assertParser2 (Command "case class KeyNotFound(key: String) extends LookupError")
@@ -69,6 +76,7 @@ test_ADT_Parser_for_Abstract_Class =
     caseObjectMissTest,
     caseClassMatchTest,
     caseClassMatchWithDefaultArgumentTest,
+    caseClassWithNonVariantMatchTest,
     caseClassWithParamAnnotationsMatchTest,
     caseClassMissTest
   ]

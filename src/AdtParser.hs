@@ -93,7 +93,7 @@ upperChar = oneOf ['A' .. 'Z']
 
 polyP :: P ()
 polyP = do
-        _ <- optional $ between (char '[') (char ']') $ many1 (noneOf "]" >> upperChar)
+        _ <- optional $ between (char '[') (char ']') $ optional (oneOf "+-") >> many1 upperChar
         -- many1 $ oneOf ("[]+-" ++ ['A' .. 'Z'])
         return ()
 
