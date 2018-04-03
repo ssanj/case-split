@@ -105,6 +105,7 @@ paramP = do
          _ <- spaces
          ptype <- typeIdP
          _ <- optional (spaces >> char '[' >> spaces >> typeIdP >> spaces >> char ']')
+         _ <- optional (spaces >> char '=' >> spaces >> typeIdP >> spaces)
          return $ ClassParam (PName pname) (PType ptype)
 
 paramsP :: P [ClassParam]

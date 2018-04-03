@@ -34,6 +34,19 @@ caseClassMatchTest =
                                    ClassParam (PName "error")  (PType "Option")
                                   ])
 
+caseClassMatchWithDefaultArgumentTest :: TestTree
+caseClassMatchWithDefaultArgumentTest =
+  assertParser (Command "final case class ScalaVersionSupplied(org: String, name: String, version: String, config: Option[String] = None) extends Dependency")
+               "ADT Parser should match a case class with default arguments"
+               (caseClassDefP "Dependency")
+               (Right $ CaseClass "ScalaVersionSupplied"
+                                  [
+                                   ClassParam (PName "org")     (PType "String"),
+                                   ClassParam (PName "name")    (PType "String"),
+                                   ClassParam (PName "version") (PType "String"),
+                                   ClassParam (PName "config")  (PType "Option")
+                                  ])
+
 caseClassWithParamAnnotationsMatchTest :: TestTree
 caseClassWithParamAnnotationsMatchTest =
   assertParser (Command "final case class Some[+A](@deprecatedName('x, \"2.12.0\") value: A) extends Option[A] {")
@@ -55,6 +68,7 @@ test_ADT_Parser_for_Abstract_Class =
     caseObjectMatchTest,
     caseObjectMissTest,
     caseClassMatchTest,
+    caseClassMatchWithDefaultArgumentTest,
     caseClassWithParamAnnotationsMatchTest,
     caseClassMissTest
   ]
