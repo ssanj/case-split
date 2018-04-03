@@ -36,7 +36,6 @@ getScalaFilesInDir dir = do files <- listDirectory dir
 getDirectories :: FilePath -> IO [FilePath]
 getDirectories root = do files <- listDirectory root
                          let absoluteFiles = fmap (root </>) $ filter (not . isHidden) files
-                         _ <- mapM_ putStrLn absoluteFiles
                          filterM doesDirectoryExist absoluteFiles
 
 -- TODO: Handle directory read errors - skip and continue
