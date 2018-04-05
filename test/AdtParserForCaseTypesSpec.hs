@@ -49,15 +49,36 @@ caseClassMatchWithDefaultArgumentTest =
 
 caseClassWithParamAnnotationsMatchTest :: TestTree
 caseClassWithParamAnnotationsMatchTest =
-  assertParser (Command "final case class Some[+A](@deprecatedName('x, \"2.12.0\") value: A) extends Option[A] {")
+  assertParser (Command "final case class FooSuper(@deprecatedName('x, \"2.12.0\") fuzz: Fizz) extends FooSuper[A] {")
                "ADT Parser should match a case class with param annotations"
+               (caseClassDefP "FooSuper")
+               (Right $ CaseClass "FooSuper" [ClassParam (PName "fuzz") (PType "Fizz")])
+
+caseClassWithCovariantMatchTest :: TestTree
+caseClassWithCovariantMatchTest =
+  assertParser (Command "final case class Some[+A](value: A) extends Option[A] {")
+               "ADT Parser should match a case class with covariant type parameters"
                (caseClassDefP "Option")
                (Right $ CaseClass "Some" [ClassParam (PName "value") (PType "A")])
 
+caseClassWithContravariantMatchTest :: TestTree
+caseClassWithContravariantMatchTest =
+  assertParser (Command "final case class Blee[-A](blurb: Blue) extends BleeSuper[A] {")
+               "ADT Parser should match a case class with covariant type parameters"
+               (caseClassDefP "BleeSuper")
+               (Right $ CaseClass "Blee" [ClassParam (PName "blurb") (PType "Blue")])
+
 caseClassWithNonVariantMatchTest :: TestTree
 caseClassWithNonVariantMatchTest =
-  assertParser (Command "final case class InvalidResourceRef[F](t: Throwable) extends ResourceProviderError[F]")
+  assertParser (Command "final case class UnknownResourceRef[F](t: Throwable) extends ResourceProviderError[F]")
                "ADT Parser should match a case class with non variant type params"
+               (caseClassDefP "ResourceProviderError")
+               (Right $ CaseClass "UnknownResourceRef" [ClassParam (PName "t") (PType "Throwable")])
+
+caseClassWithMultipleVariantMatchTest :: TestTree
+caseClassWithMultipleVariantMatchTest =
+  assertParser (Command "final case class InvalidResourceRef[+F, -AA, C](t: Throwable) extends ResourceProviderError[F]")
+               "ADT Parser should match a case class with multiple variant type params"
                (caseClassDefP "ResourceProviderError")
                (Right $ CaseClass "InvalidResourceRef" [ClassParam (PName "t") (PType "Throwable")])
 
@@ -76,7 +97,10 @@ test_ADT_Parser_for_Abstract_Class =
     caseObjectMissTest,
     caseClassMatchTest,
     caseClassMatchWithDefaultArgumentTest,
+    caseClassWithCovariantMatchTest,
+    caseClassWithContravariantMatchTest,
     caseClassWithNonVariantMatchTest,
+    caseClassWithMultipleVariantMatchTest,
     caseClassWithParamAnnotationsMatchTest,
     caseClassMissTest
   ]

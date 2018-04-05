@@ -91,11 +91,23 @@ caseObjectDefP adt = do
 upperChar :: P Char
 upperChar = oneOf ['A' .. 'Z']
 
-polyP :: P ()
-polyP = do
-        _ <- optional $ between (char '[') (char ']') $ optional (oneOf "+-") >> many1 upperChar
-        -- many1 $ oneOf ("[]+-" ++ ['A' .. 'Z'])
-        return ()
+typeParamP :: P ()
+typeParamP = do
+             _ <- spaces
+             _ <- optional (oneOf "-+")
+             _ <- (many1 upperChar)
+             _ <- spaces
+             return ()
+
+typeParamPs :: P ()
+typeParamPs = do
+              _ <- typeParamP `sepBy` (char ',')
+              return ()
+
+typeParamDefP :: P ()
+typeParamDefP = do
+                _ <- optional $ between (char '[') (char ']') $ typeParamPs
+                return ()
 
 paramP :: P ClassParam
 paramP = do
@@ -135,7 +147,7 @@ caseClassDefP adt = do
                     _ <- spaces
                     name <- typeIdP
                     _ <- spaces
-                    _ <- polyP
+                    _ <- typeParamDefP
                     params <- methodParamsP
                     _ <- spaces
                     _ <- string "extends"
