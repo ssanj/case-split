@@ -8,7 +8,7 @@ module AdtParser
       abstractClassDefP,
       caseObjectDefP,
       caseClassDefP,
-      paramP,
+      singleParamP,
       paramsP,
       methodParamsP,
       annotationP,
@@ -56,109 +56,113 @@ adtTypeP baseType = try (caseObjectDefP baseType) <|> caseClassDefP baseType
 
 -- trait Blah[+A] {
 traitDefP :: P String
-traitDefP = do
-            _ <- string "sealed"
-            _ <- spaces
-            _ <- string "trait"
-            _ <- spaces
-            typeIdP
+traitDefP = do _ <- string "sealed"
+               _ <- spaces
+               _ <- string "trait"
+               _ <- spaces
+               typeIdP
 
 abstractClassDefP :: P String
-abstractClassDefP = do
-                    _ <- string "sealed"
-                    _ <- spaces
-                    _ <- string "abstract"
-                    _ <- spaces
-                    _ <- string "class"
-                    _ <- spaces
-                    typeIdP
+abstractClassDefP = do _ <- string "sealed"
+                       _ <- spaces
+                       _ <- string "abstract"
+                       _ <- spaces
+                       _ <- string "class"
+                       _ <- spaces
+                       typeIdP
 
 caseObjectDefP :: String -> P AdtType
-caseObjectDefP adt = do
-                     _ <- optional (string "final")
-                     _ <- spaces
-                     _ <- string "case"
-                     _ <- spaces
-                     _ <- string "object"
-                     _ <- spaces
-                     name <- typeIdP
-                     _ <- spaces
-                     _ <- string "extends"
-                     _ <- spaces
-                     _ <- string adt
-                     return (CaseObject name)
+caseObjectDefP adt = do _ <- optional (string "final")
+                        _ <- spaces
+                        _ <- string "case"
+                        _ <- spaces
+                        _ <- string "object"
+                        _ <- spaces
+                        name <- typeIdP
+                        _ <- spaces
+                        _ <- string "extends"
+                        _ <- spaces
+                        _ <- string adt
+                        return (CaseObject name)
 
 upperChar :: P Char
 upperChar = oneOf ['A' .. 'Z']
 
+singleTypeParamP :: P ()
+singleTypeParamP = do _ <- spaces
+                      _ <- optional (oneOf "-+")
+                      _ <- (many1 upperChar)
+                      _ <- spaces
+                      return ()
+
+multipleTypeParamP :: P ()
+multipleTypeParamP = do _ <- singleTypeParamP `sepBy` (char ',')
+                        return ()
+
 typeParamP :: P ()
-typeParamP = do
-             _ <- spaces
-             _ <- optional (oneOf "-+")
-             _ <- (many1 upperChar)
-             _ <- spaces
-             return ()
+typeParamP = optional $ between (char '[') (char ']') $ multipleTypeParamP
 
-typeParamPs :: P ()
-typeParamPs = do
-              _ <- typeParamP `sepBy` (char ',')
-              return ()
+singleClassParamP :: P ()
+singleClassParamP = do _ <- spaces
+                       _ <- typeIdP
+                       _ <- spaces
+                       return ()
 
-typeParamDefP :: P ()
-typeParamDefP = do
-                _ <- optional $ between (char '[') (char ']') $ typeParamPs
-                return ()
+multipleClassParamP :: P ()
+multipleClassParamP = do _ <- singleClassParamP `sepBy` (char ',')
+                         return ()
 
-paramP :: P ClassParam
-paramP = do
-         pname <- valP
-         _ <- spaces
-         _ <- char ':'
-         _ <- spaces
-         ptype <- typeIdP
-         _ <- optional (spaces >> char '[' >> spaces >> typeIdP >> spaces >> char ']')
-         _ <- optional (spaces >> char '=' >> spaces >> typeIdP >> spaces)
-         return $ ClassParam (PName pname) (PType ptype)
+classParamP :: P ()
+classParamP = optional $ between (char '[') (char ']') $ multipleClassParamP
+
+defaultParamP :: P ()
+defaultParamP = optional (spaces >> char '=' >> spaces >> typeIdP >> spaces)
+
+singleParamP :: P ClassParam
+singleParamP = do pname <- valP
+                  _ <- spaces
+                  _ <- char ':'
+                  _ <- spaces
+                  ptype <- typeIdP
+                  _ <- classParamP
+                  _ <- defaultParamP
+                  return $ ClassParam (PName pname) (PType ptype)
 
 paramsP :: P [ClassParam]
-paramsP = do
-          _ <- spaces
-          first <- paramP
-          rest <- try (spaces >> char ',' >> paramsP) <|> (pure [])
-          return (first : rest)
+paramsP = do _ <- spaces
+             first <- singleParamP
+             rest <- try (spaces >> char ',' >> paramsP) <|> (pure [])
+             return (first : rest)
 
 methodParamsP :: P [ClassParam]
-methodParamsP = do
-                _ <- char '('
-                _ <- spaces
-                _ <- optional annotationP
-                params <- paramsP
-                _ <- spaces
-                _ <- char ')'
-                return params
+methodParamsP = do _ <- char '('
+                   _ <- spaces
+                   _ <- optional annotationP
+                   params <- paramsP
+                   _ <- spaces
+                   _ <- char ')'
+                   return params
 
 caseClassDefP :: String -> P AdtType
-caseClassDefP adt = do
-                    _ <- optional (string "final")
-                    _ <- spaces
-                    _ <- string "case"
-                    _ <- spaces
-                    _ <- string "class"
-                    _ <- spaces
-                    name <- typeIdP
-                    _ <- spaces
-                    _ <- typeParamDefP
-                    params <- methodParamsP
-                    _ <- spaces
-                    _ <- string "extends"
-                    _ <- spaces
-                    _ <- string adt
-                    return (CaseClass name params)
+caseClassDefP adt = do _ <- optional (string "final")
+                       _ <- spaces
+                       _ <- string "case"
+                       _ <- spaces
+                       _ <- string "class"
+                       _ <- spaces
+                       name <- typeIdP
+                       _ <- spaces
+                       _ <- typeParamP
+                       params <- methodParamsP
+                       _ <- spaces
+                       _ <- string "extends"
+                       _ <- spaces
+                       _ <- string adt
+                       return (CaseClass name params)
 
 -- @deprecatedName('x, "2.12.0")
 annotationP :: P (String, String)
-annotationP = do
-              _ <- char '@'
-              name <- valP
-              annotation <- between (char '(') (char ')') (many1 $ noneOf ")" >> anyChar)
-              return (name, annotation)
+annotationP = do _ <- char '@'
+                 name <- valP
+                 annotation <- between (char '(') (char ')') (many1 $ noneOf ")" >> anyChar)
+                 return (name, annotation)

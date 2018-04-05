@@ -34,6 +34,17 @@ caseClassMatchTest =
                                    ClassParam (PName "error")  (PType "Option")
                                   ])
 
+caseClassMultipleTypeArgsMatchTest :: TestTree
+caseClassMultipleTypeArgsMatchTest =
+  assertParser (Command "case class SomeInt(reason: String, error: Either[String, Int]) extends IType")
+               "ADT Parser should match a case class with multiple type args"
+               (caseClassDefP "IType")
+               (Right $ CaseClass "SomeInt"
+                                  [
+                                   ClassParam (PName "reason") (PType "String"),
+                                   ClassParam (PName "error")  (PType "Either")
+                                  ])
+
 caseClassMatchWithDefaultArgumentTest :: TestTree
 caseClassMatchWithDefaultArgumentTest =
   assertParser (Command "final case class ScalaVersionSupplied(org: String, name: String, version: String, config: Option[String] = None) extends Dependency")
@@ -96,6 +107,7 @@ test_ADT_Parser_for_Abstract_Class =
     caseObjectMatchTest,
     caseObjectMissTest,
     caseClassMatchTest,
+    caseClassMultipleTypeArgsMatchTest,
     caseClassMatchWithDefaultArgumentTest,
     caseClassWithCovariantMatchTest,
     caseClassWithContravariantMatchTest,
