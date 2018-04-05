@@ -39,18 +39,23 @@ typeIdP = many1 alphaNum
 valP :: P String
 valP = many1 alphaNum
 
+-- TODO: test
 hasADT :: String -> Bool
 hasADT line = either (const False) (const True) (parse adtP "" line)
 
+-- TODO: test
 getAdt :: String -> Either ParseError String
 getAdt line = parse adtP "" line
 
+-- TODO: test
 getAdtType :: String -> [String] -> [AdtType]
 getAdtType key content = rights $ fmap (parse (adtTypeP key) "") content
 
+-- TODO: test
 adtP :: P String
 adtP = try (traitDefP) <|> abstractClassDefP
 
+-- TODO: test
 adtTypeP :: String -> P AdtType
 adtTypeP baseType = try (caseObjectDefP baseType) <|> caseClassDefP baseType
 

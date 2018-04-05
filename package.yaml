@@ -30,7 +30,9 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-          AdtParser
+          - AdtParser
+          - AdtProcessor
+          - PrettyPrint
 
 executables:
   case-split-exe:

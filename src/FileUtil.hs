@@ -1,25 +1,13 @@
 module FileUtil (getScalaFilesInDir,
                  fetchLines,
-                 findFilesThatMatch,
                  getDirectories,
-                 getAllSubDirectories,
-                 findAdtMatches,
-                 processAdt,
-                 processMatches) where
+                 getAllSubDirectories) where
 
 import Data.Char (isSpace)
-import Data.Either (rights)
-import Data.Maybe (isJust)
-import Control.Applicative (liftA2)
 import Control.Monad (filterM)
-import Data.List (dropWhileEnd, find, isSuffixOf, isPrefixOf)
+import Data.List (dropWhileEnd, isSuffixOf, isPrefixOf)
 import System.Directory
 import System.FilePath.Posix
-import AdtParser
-
-data AdtMatchedResults     = AdtMatchedResults [FilePath] deriving Show
-data AdtConsideredResults = AdtConsideredResults [FilePath] deriving Show
-
 
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
@@ -45,25 +33,6 @@ getAllSubDirectories root = do dirs <- getDirectories root
                                    allDirs = (pure dirs) : subs
                                foldMap id allDirs
 
-findAdtMatches :: FilePath -> IO (AdtMatchedResults, AdtConsideredResults)
-findAdtMatches root = do allDirs <- getAllSubDirectories root
-                         let scalaFiles = fmap getScalaFilesInDir allDirs -- [IO [FilePath]]
-                         (matched, considered) <- foldMap (fmap (\fp -> (findFilesThatMatch fp, pure fp))) scalaFiles -- (IO [FilePath], IO [FilePath])
-                         liftA2 (\m c -> (AdtMatchedResults m, AdtConsideredResults c)) matched considered
-
-processMatches :: AdtMatchedResults -> IO [(String, [AdtType])]
-processMatches (AdtMatchedResults files) =
-    let processedFileContent = fmap (\f -> fmap processAdt $ fetchLines f) files in
-    foldMap id processedFileContent
-
-processAdt :: [String] -> [(String, [AdtType])]
-processAdt contents = let keys       = rights $ fmap (getAdt) contents
-                          keyValues  = fmap (\k -> (k, getAdtType k contents)) keys
-                          matches    = filter (\(_, v) -> not $ null v) keyValues
-                      in matches
-
-findFilesThatMatch :: [FilePath] -> IO [FilePath]
-findFilesThatMatch files = filterM (\f -> isJust . find hasADT <$> (fetchLines f)) files
 
 fetchLines :: FilePath -> IO [String]
 fetchLines file = (fmap trim . lines) <$> readFile file
